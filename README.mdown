@@ -13,8 +13,6 @@ This *fork* adds *Xcode 4* support and some extra features that makes *Xcode* ed
 
 * **`]` always wraps:** Pressing `]` when there is something selected, wraps the selection with square brackets, rather than replacing whole selection with `]`.
 
-* **Whitespace display:** This is well known *TextMate* feature I missed most in *Xcode*, now *Xcode* displays whitespaces (aka invisibles) with similar glyphs as *TextMate* using light-grey color.
-
 # Installation
 
 1. Open the project and build the plug-in.

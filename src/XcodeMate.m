@@ -25,48 +25,7 @@
 @end
 
 static NSSet *XcodeMateLanguages;
-static NSDictionary *WhitespaceAttributes;
 static NSString *OpeningsClosings = @"\"\"''()[]";
-
-@implementation NSLayoutManager (XcodeMate)
-- (void)XcodeMate_drawGlyphsForGlyphRange:(NSRange)glyphRange atPoint:(NSPoint)containerOrigin
-{
-	NSString *docContents = [[self textStorage] string];
-	// Loop thru current range, drawing glyphs
-	for(int i = glyphRange.location; i < NSMaxRange(glyphRange); i++) {
-		NSString *glyph;
-		// Look for special chars
-		switch ([docContents characterAtIndex:i]) {
-		/* Space
-		case ' ':
-			glyph = @"\u2022";
-			break;
-		*/
-		// Tab
-		case '\t':
-			glyph = @"\u25B8";
-			break;
-		// EOL
-		case 0x2028:
-		case 0x2029:
-		case '\n':
-		case '\r':
-			glyph = @"\u00AC";
-			break;
-		// Nothing
-		default:
-			continue;
-		}
-		// Should we draw?
-		NSPoint glyphPoint = [self locationForGlyphAtIndex:i];
-		NSRect glyphRect = [self lineFragmentUsedRectForGlyphAtIndex:i effectiveRange:NULL];
-		glyphPoint.x -= glyphRect.origin.x;
-		glyphPoint.y = glyphRect.origin.y;
-		[glyph drawAtPoint:glyphPoint withAttributes:WhitespaceAttributes];
-	}
-	[self XcodeMate_drawGlyphsForGlyphRange:glyphRange atPoint:containerOrigin];
-}
-@end
 
 @implementation NSTextView (XcodeMate)
 - (void)XcodeMate_keyDown:(NSEvent*)event
@@ -205,10 +164,6 @@ static NSUInteger TextViewLineIndex (NSTextView *textView)
 		if(![NSClassFromString(@"DVTSourceTextView") jr_swizzleMethod:@selector(deleteBackward:) withMethod:@selector(XcodeMate_deleteBackward:) error:&error]) {
 			NSLog(@"XcodeMate failed to swizzle `-[DVTSourceTextView deleteBackward:]', %@", [error localizedDescription]);
 		}
-		error = nil;
-		if(![NSClassFromString(@"DVTLayoutManager") jr_swizzleMethod:@selector(drawGlyphsForGlyphRange:atPoint:) withMethod:@selector(XcodeMate_drawGlyphsForGlyphRange:atPoint:) error:&error]) {
-			NSLog(@"XcodeMate failed to swizzle `-[DVTLayoutManager drawGlyphsForGlyphRange:atPoint:]', %@", [error localizedDescription]);
-		}
 	} else { // Xcode 3.x support
 		NSError *error = nil;
 		if(![NSClassFromString(@"XCSourceCodeTextView") jr_swizzleMethod:@selector(keyDown:) withMethod:@selector(XcodeMate_keyDown:) error:&error]) {
@@ -217,10 +172,6 @@ static NSUInteger TextViewLineIndex (NSTextView *textView)
 		error = nil;
 		if(![NSClassFromString(@"XCSourceCodeTextView") jr_swizzleMethod:@selector(deleteBackward:) withMethod:@selector(XcodeMate_deleteBackward:) error:&error]) {
 			NSLog(@"XcodeMate failed to swizzle `-[XCSourceCodeTextView deleteBackward:]', %@", [error localizedDescription]);
-		}
-		error = nil;
-		if(![NSClassFromString(@"XCLayoutManager") jr_swizzleMethod:@selector(drawGlyphsForGlyphRange:atPoint:) withMethod:@selector(XcodeMate_drawGlyphsForGlyphRange:atPoint:) error:&error]) {
-			NSLog(@"XcodeMate failed to swizzle `-[XCLayoutManager drawGlyphsForGlyphRange:atPoint:]', %@", [error localizedDescription]);
 		}
 	}
 
@@ -236,7 +187,6 @@ static NSUInteger TextViewLineIndex (NSTextView *textView)
 						  @"Xcode.SourceCodeLanguage.Objective-C++",
 						  @"Xcode.SourceCodeLanguage.Objective-J",
 						  nil];
-	WhitespaceAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSColor colorWithDeviceWhite:0.6 alpha:0.25], NSForegroundColorAttributeName, nil];
 
 	NSLog(@"XcodeMate %@ loaded.", [[NSBundle mainBundle] objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]);
 }
